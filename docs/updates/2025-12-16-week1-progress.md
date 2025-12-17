@@ -34,7 +34,7 @@ tested on example.com, the-internet.herokuapp.com, and vibium.com. everything wo
 
 ---
 
-## cli in action:
+## cli in action
 
 ```bash
 # take a screenshot
@@ -59,7 +59,7 @@ flags for debugging:
 
 ---
 
-## building with claude code:
+## building with claude code
 
 it's been a joy using claude code to build vibium. each milestone is a prompt. claude reads the roadmap, implements the feature, runs the checkpoint test, and we move on. so much fun. it helps that the webdriver bidi spec has been out for a few years. it's pretty straightforward to implement now. it's "just websockets and json", just like the chrome devtools protocol that playwright depends on.
 
