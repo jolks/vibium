@@ -140,36 +140,43 @@ func main() {
 		Use:   "bidi-test",
 		Short: "Launch browser, connect via BiDi, send session.status",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Launching browser...")
-			launchResult, err := browser.Launch(browser.LaunchOptions{Headless: true})
+			fmt.Println("[1/5] Launching chromedriver...")
+			launchResult, err := browser.Launch(browser.LaunchOptions{Headless: true, Verbose: true})
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error launching browser: %v\n", err)
 				os.Exit(1)
 			}
 			defer launchResult.Close()
+			fmt.Printf("       Chromedriver started on port %d\n", launchResult.Port)
+			fmt.Printf("       Session ID: %s\n", launchResult.SessionID)
 
-			fmt.Printf("BiDi WebSocket: %s\n", launchResult.WebSocketURL)
-			fmt.Println("Connecting to BiDi WebSocket...")
+			fmt.Println("[2/5] WebDriver session created with BiDi enabled")
+			fmt.Printf("       WebSocket URL: %s\n", launchResult.WebSocketURL)
 
+			fmt.Println("[3/5] Connecting to BiDi WebSocket...")
 			conn, err := bidi.Connect(launchResult.WebSocketURL)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error connecting: %v\n", err)
 				os.Exit(1)
 			}
 			defer conn.Close()
+			fmt.Println("       Connected!")
 
+			fmt.Println("[4/5] Sending BiDi command: session.status")
 			client := bidi.NewClient(conn)
+			client.SetVerbose(true)
 
-			fmt.Println("Sending session.status...")
 			status, err := client.SessionStatus()
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 				os.Exit(1)
 			}
 
-			fmt.Printf("Response:\n")
-			fmt.Printf("  Ready: %v\n", status.Ready)
-			fmt.Printf("  Message: %s\n", status.Message)
+			fmt.Println("[5/5] Parsed response:")
+			fmt.Printf("       Ready: %v\n", status.Ready)
+			fmt.Printf("       Message: %s\n", status.Message)
+
+			fmt.Println("\nTest complete!")
 		},
 	})
 

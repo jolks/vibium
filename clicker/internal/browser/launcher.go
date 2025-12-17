@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
+	"os"
 	"os/exec"
 	"syscall"
 	"time"
@@ -14,10 +16,41 @@ import (
 	"github.com/vibium/clicker/internal/process"
 )
 
+// prefixWriter wraps an io.Writer and prepends a prefix to each line.
+type prefixWriter struct {
+	w      io.Writer
+	prefix string
+	atBOL  bool // at beginning of line
+}
+
+func newPrefixWriter(w io.Writer, prefix string) *prefixWriter {
+	return &prefixWriter{w: w, prefix: prefix, atBOL: true}
+}
+
+func (pw *prefixWriter) Write(p []byte) (n int, err error) {
+	for _, b := range p {
+		if pw.atBOL {
+			if _, err := pw.w.Write([]byte(pw.prefix)); err != nil {
+				return n, err
+			}
+			pw.atBOL = false
+		}
+		if _, err := pw.w.Write([]byte{b}); err != nil {
+			return n, err
+		}
+		n++
+		if b == '\n' {
+			pw.atBOL = true
+		}
+	}
+	return n, nil
+}
+
 // LaunchOptions contains options for launching the browser.
 type LaunchOptions struct {
 	Headless bool
-	Port     int // Chromedriver port, 0 = auto-select
+	Port     int  // Chromedriver port, 0 = auto-select
+	Verbose  bool // Show chromedriver output
 }
 
 // LaunchResult contains the result of launching the browser via chromedriver.
@@ -82,6 +115,12 @@ func Launch(opts LaunchOptions) (*LaunchResult, error) {
 	// Start chromedriver as a process group leader so we can kill all children
 	cmd := exec.Command(chromedriverPath, fmt.Sprintf("--port=%d", port))
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	if opts.Verbose {
+		fmt.Println("       ------- chromedriver -------")
+		pw := newPrefixWriter(os.Stdout, "       ")
+		cmd.Stdout = pw
+		cmd.Stderr = pw
+	}
 	if err := cmd.Start(); err != nil {
 		return nil, fmt.Errorf("failed to start chromedriver: %w", err)
 	}
@@ -96,8 +135,12 @@ func Launch(opts LaunchOptions) (*LaunchResult, error) {
 		return nil, fmt.Errorf("chromedriver failed to start: %w", err)
 	}
 
+	if opts.Verbose {
+		fmt.Println("       ----------------------------")
+	}
+
 	// Create session with BiDi enabled
-	sessionID, wsURL, err := createSession(baseURL, chromePath, opts.Headless)
+	sessionID, wsURL, err := createSession(baseURL, chromePath, opts.Headless, opts.Verbose)
 	if err != nil {
 		cmd.Process.Kill()
 		return nil, fmt.Errorf("failed to create session: %w", err)
@@ -138,7 +181,7 @@ func waitForChromedriver(baseURL string, timeout time.Duration) error {
 }
 
 // createSession creates a new WebDriver session with BiDi enabled.
-func createSession(baseURL, chromePath string, headless bool) (string, string, error) {
+func createSession(baseURL, chromePath string, headless, verbose bool) (string, string, error) {
 	args := []string{
 		"--no-first-run",
 		"--no-default-browser-check",
@@ -187,6 +230,11 @@ func createSession(baseURL, chromePath string, headless bool) (string, string, e
 		return "", "", err
 	}
 
+	if verbose {
+		fmt.Println("       ------- POST /session -------")
+		fmt.Printf("       --> %s\n", string(jsonBody))
+	}
+
 	resp, err := http.Post(baseURL+"/session", "application/json", bytes.NewReader(jsonBody))
 	if err != nil {
 		return "", "", err
@@ -197,8 +245,19 @@ func createSession(baseURL, chromePath string, headless bool) (string, string, e
 		return "", "", fmt.Errorf("failed to create session: HTTP %d", resp.StatusCode)
 	}
 
+	// Read response body for logging and parsing
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to read session response: %w", err)
+	}
+
+	if verbose {
+		fmt.Printf("       <-- %s\n", string(respBody))
+		fmt.Println("       ------------------------------")
+	}
+
 	var sessResp sessionResponse
-	if err := json.NewDecoder(resp.Body).Decode(&sessResp); err != nil {
+	if err := json.Unmarshal(respBody, &sessResp); err != nil {
 		return "", "", fmt.Errorf("failed to decode session response: %w", err)
 	}
 

@@ -7,12 +7,18 @@ import (
 
 // Client is a BiDi client that wraps a WebSocket connection.
 type Client struct {
-	conn *Connection
+	conn    *Connection
+	verbose bool
 }
 
 // NewClient creates a new BiDi client from a WebSocket connection.
 func NewClient(conn *Connection) *Client {
 	return &Client{conn: conn}
+}
+
+// SetVerbose enables or disables verbose logging of JSON messages.
+func (c *Client) SetVerbose(verbose bool) {
+	c.verbose = verbose
 }
 
 // SendCommand sends a BiDi command and waits for the response.
@@ -24,6 +30,10 @@ func (c *Client) SendCommand(method string, params interface{}) (*Message, error
 		return nil, fmt.Errorf("failed to marshal command: %w", err)
 	}
 
+	if c.verbose {
+		fmt.Printf("       --> %s\n", string(data))
+	}
+
 	if err := c.conn.Send(string(data)); err != nil {
 		return nil, fmt.Errorf("failed to send command: %w", err)
 	}
@@ -33,6 +43,10 @@ func (c *Client) SendCommand(method string, params interface{}) (*Message, error
 		resp, err := c.conn.Receive()
 		if err != nil {
 			return nil, fmt.Errorf("failed to receive response: %w", err)
+		}
+
+		if c.verbose {
+			fmt.Printf("       <-- %s\n", resp)
 		}
 
 		msg, err := UnmarshalMessage([]byte(resp))
@@ -54,6 +68,9 @@ func (c *Client) SendCommand(method string, params interface{}) (*Message, error
 
 		// If it's an event, skip it for now (could be handled by event listener)
 		if msg.IsEvent() {
+			if c.verbose {
+				fmt.Printf("       (event, skipping)\n")
+			}
 			continue
 		}
 	}
