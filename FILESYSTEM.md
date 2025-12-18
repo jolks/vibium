@@ -28,7 +28,8 @@ vibium/
 │   │   │   ├── session.go                # session module
 │   │   │   ├── browsingcontext.go        # browsingContext module
 │   │   │   ├── script.go                 # script module
-│   │   │   └── input.go                  # input module
+│   │   │   ├── input.go                  # input module
+│   │   │   └── element.go                # Element finding via script
 │   │   │
 │   │   ├── proxy/                        # BiDi Pass-through Proxy
 │   │   │   ├── server.go                 # WebSocket proxy server
@@ -36,7 +37,6 @@ vibium/
 │   │   │
 │   │   ├── browser/                      # Browser Management
 │   │   │   ├── launcher.go               # Browser process launching
-│   │   │   ├── detector.go               # Detect installed browsers
 │   │   │   └── installer.go              # Chrome for Testing downloader
 │   │   │
 │   │   ├── features/                     # High-level Features
