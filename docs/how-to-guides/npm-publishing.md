@@ -38,14 +38,14 @@ npx vibium  # Should start MCP server
 
 ```bash
 # Platform packages (all must succeed before publishing main)
-cd packages/linux-x64 && npm publish --access public
-cd packages/linux-arm64 && npm publish --access public
-cd packages/darwin-x64 && npm publish --access public
-cd packages/darwin-arm64 && npm publish --access public
-cd packages/win32-x64 && npm publish --access public
+(cd packages/linux-x64 && npm publish --access public)
+(cd packages/linux-arm64 && npm publish --access public)
+(cd packages/darwin-x64 && npm publish --access public)
+(cd packages/darwin-arm64 && npm publish --access public)
+(cd packages/win32-x64 && npm publish --access public)
 
 # Main package (after all platform packages are live)
-cd packages/vibium && npm publish
+(cd packages/vibium && npm publish)
 ```
 
 ## Version Bumping
