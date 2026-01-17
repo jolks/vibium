@@ -86,10 +86,9 @@ class BiDiClient:
             response = await future
 
             if response.get("type") == "error":
-                error_info = response.get("error", {})
                 raise BiDiError(
-                    error_info.get("error", "unknown"),
-                    error_info.get("message", "Unknown error"),
+                    response.get("error", "unknown"),
+                    response.get("message", "Unknown error"),
                 )
 
             return response.get("result")
