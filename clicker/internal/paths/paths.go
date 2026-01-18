@@ -60,29 +60,31 @@ func GetChromeForTestingDir() (string, error) {
 	return filepath.Join(cacheDir, "chrome-for-testing"), nil
 }
 
-// GetChromeExecutable returns the path to Chrome executable.
-// First checks Vibium cache for Chrome for Testing, then falls back to system Chrome.
+// GetChromeExecutable returns the path to Chrome for Testing executable.
+// Only checks Vibium cache - does not fall back to system Chrome.
 func GetChromeExecutable() (string, error) {
-	// First, check for cached Chrome for Testing
 	cftDir, err := GetChromeForTestingDir()
-	if err == nil {
-		// Look for version directories
-		entries, err := os.ReadDir(cftDir)
-		if err == nil && len(entries) > 0 {
-			// Use the first (or latest) version found
-			for _, entry := range entries {
-				if entry.IsDir() {
-					chromePath := getChromePathInVersion(filepath.Join(cftDir, entry.Name()))
-					if _, err := os.Stat(chromePath); err == nil {
-						return chromePath, nil
-					}
-				}
+	if err != nil {
+		return "", err
+	}
+
+	// Look for version directories
+	entries, err := os.ReadDir(cftDir)
+	if err != nil {
+		return "", err
+	}
+
+	// Use the first (or latest) version found
+	for _, entry := range entries {
+		if entry.IsDir() {
+			chromePath := getChromePathInVersion(filepath.Join(cftDir, entry.Name()))
+			if _, err := os.Stat(chromePath); err == nil {
+				return chromePath, nil
 			}
 		}
 	}
 
-	// Fall back to system Chrome
-	return getSystemChromePath()
+	return "", os.ErrNotExist
 }
 
 // GetChromedriverPath returns the path to the cached chromedriver.
@@ -148,46 +150,6 @@ func getPlatformString() string {
 	default: // linux
 		return "linux64"
 	}
-}
-
-// getSystemChromePath returns the path to system-installed Chrome.
-func getSystemChromePath() (string, error) {
-	var paths []string
-
-	switch runtime.GOOS {
-	case "darwin":
-		paths = []string{
-			"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-			"/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
-			"/Applications/Chromium.app/Contents/MacOS/Chromium",
-		}
-	case "windows":
-		programFiles := os.Getenv("PROGRAMFILES")
-		programFilesX86 := os.Getenv("PROGRAMFILES(X86)")
-		localAppData := os.Getenv("LOCALAPPDATA")
-
-		paths = []string{
-			filepath.Join(programFiles, "Google", "Chrome", "Application", "chrome.exe"),
-			filepath.Join(programFilesX86, "Google", "Chrome", "Application", "chrome.exe"),
-			filepath.Join(localAppData, "Google", "Chrome", "Application", "chrome.exe"),
-		}
-	default: // linux
-		paths = []string{
-			"/usr/bin/google-chrome",
-			"/usr/bin/google-chrome-stable",
-			"/usr/bin/chromium",
-			"/usr/bin/chromium-browser",
-			"/snap/bin/chromium",
-		}
-	}
-
-	for _, p := range paths {
-		if _, err := os.Stat(p); err == nil {
-			return p, nil
-		}
-	}
-
-	return "", os.ErrNotExist
 }
 
 // GetPlatformString is exported for use by the installer.
