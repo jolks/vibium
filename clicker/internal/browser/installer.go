@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -123,6 +124,12 @@ func Install() (*InstallResult, error) {
 	if runtime.GOOS != "windows" {
 		os.Chmod(chromePath, 0755)
 		os.Chmod(chromedriverPath, 0755)
+	}
+
+	// Remove quarantine attribute on macOS to avoid Gatekeeper prompts
+	if runtime.GOOS == "darwin" {
+		exec.Command("xattr", "-d", "com.apple.quarantine", chromePath).Run()
+		exec.Command("xattr", "-d", "com.apple.quarantine", chromedriverPath).Run()
 	}
 
 	return &InstallResult{

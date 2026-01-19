@@ -737,6 +737,29 @@ The server provides browser automation tools:
   echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}' | clicker mcp`,
 		Run: func(cmd *cobra.Command, args []string) {
 			process.WithCleanup(func() {
+				// If running in a terminal, print helpful info to stderr
+				if stat, _ := os.Stdin.Stat(); (stat.Mode() & os.ModeCharDevice) != 0 {
+					fmt.Fprintf(os.Stderr, "Vibium MCP server v%s\n", version)
+					fmt.Fprintln(os.Stderr, "This server communicates via JSON-RPC over stdin/stdout.")
+					fmt.Fprintln(os.Stderr, "It's meant to be run by an MCP client (e.g., Claude Desktop).")
+					fmt.Fprintln(os.Stderr, "")
+
+					// Show Chrome for Testing status
+					chromePath, chromeErr := paths.GetChromeExecutable()
+					chromedriverPath, driverErr := paths.GetChromedriverPath()
+
+					if chromeErr != nil || driverErr != nil {
+						fmt.Fprintln(os.Stderr, "Chrome for Testing: not installed")
+						fmt.Fprintln(os.Stderr, "Run 'clicker install' to download Chrome for Testing and chromedriver.")
+					} else {
+						fmt.Fprintf(os.Stderr, "Chrome: %s\n", chromePath)
+						fmt.Fprintf(os.Stderr, "Chromedriver: %s\n", chromedriverPath)
+					}
+
+					fmt.Fprintln(os.Stderr, "")
+					fmt.Fprintln(os.Stderr, "Waiting for client connection on stdin...")
+				}
+
 				var screenshotDir string
 
 				// Check if flag was explicitly set
