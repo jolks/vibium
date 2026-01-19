@@ -44,11 +44,25 @@ type InstallResult struct {
 }
 
 // Install downloads and installs Chrome for Testing and chromedriver.
-// Returns paths to the installed binaries.
+// Returns paths to the installed binaries. Skips download if already installed.
 func Install() (*InstallResult, error) {
 	// Check for skip environment variable
 	if os.Getenv("VIBIUM_SKIP_BROWSER_DOWNLOAD") == "1" {
 		return nil, fmt.Errorf("browser download skipped (VIBIUM_SKIP_BROWSER_DOWNLOAD=1)")
+	}
+
+	// Check if already installed
+	if IsInstalled() {
+		chromePath, _ := paths.GetChromeExecutable()
+		chromedriverPath, _ := paths.GetChromedriverPath()
+		// Extract version from path (e.g., .../chrome-for-testing/143.0.7499.192/...)
+		version := extractVersionFromPath(chromePath)
+		fmt.Printf("Chrome for Testing v%s already installed.\n", version)
+		return &InstallResult{
+			ChromePath:       chromePath,
+			ChromedriverPath: chromedriverPath,
+			Version:          version,
+		}, nil
 	}
 
 	platform := paths.GetPlatformString()
@@ -239,4 +253,16 @@ func IsInstalled() bool {
 	}
 	_, err = os.Stat(chromePath)
 	return err == nil
+}
+
+// extractVersionFromPath extracts the version number from a Chrome path.
+// e.g., ".../chrome-for-testing/143.0.7499.192/..." -> "143.0.7499.192"
+func extractVersionFromPath(path string) string {
+	parts := strings.Split(path, string(os.PathSeparator))
+	for i, part := range parts {
+		if part == "chrome-for-testing" && i+1 < len(parts) {
+			return parts[i+1]
+		}
+	}
+	return "unknown"
 }

@@ -29,10 +29,10 @@ If you prefer to develop directly on your host machine, follow the steps below.
 git clone https://github.com/VibiumDev/vibium.git
 cd vibium
 make
-make install-browser
+make test
 ```
 
-This installs npm dependencies, builds clicker and the JS client, and downloads Chrome for Testing.
+This installs npm dependencies, builds clicker and the JS client, downloads Chrome for Testing (if needed), and runs the test suite.
 
 ---
 
@@ -58,7 +58,7 @@ make package-python     # Build Python wheels only
 ### Test
 
 ```bash
-make test               # Run all tests (CLI + JS + MCP)
+make test               # Run all tests (CLI + JS + MCP) - auto-installs Chrome for Testing
 make test-cli           # Run CLI tests only
 make test-js            # Run JS library tests only
 make test-mcp           # Run MCP server tests only

@@ -82,7 +82,7 @@ serve: build-go
 	./clicker/bin/clicker serve
 
 # Run all tests
-test: build test-cli test-js test-mcp
+test: build install-browser test-cli test-js test-mcp
 
 # Run CLI tests (tests the clicker binary directly)
 # Process tests run separately with --test-concurrency=1 to avoid interference
