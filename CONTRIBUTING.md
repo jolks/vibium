@@ -29,10 +29,10 @@ If you prefer to develop directly on your host machine, follow the steps below.
 git clone https://github.com/VibiumDev/vibium.git
 cd vibium
 make
-make install-browser
+make test
 ```
 
-This installs npm dependencies, builds clicker and the JS client, and downloads Chrome for Testing.
+This installs npm dependencies, builds clicker and the JS client, downloads Chrome for Testing (if needed), and runs the test suite.
 
 ---
 
@@ -41,47 +41,52 @@ This installs npm dependencies, builds clicker and the JS client, and downloads 
 ### Build
 
 ```bash
-make                    # Build everything (default)
-make build-go           # Build clicker binary
-make build-js           # Build JS client
-make build-all-platforms # Cross-compile clicker for all platforms
+make                       # Build everything (default)
+make build-go              # Build clicker binary
+make build-js              # Build JS client
+make build-go-all          # Cross-compile clicker for all platforms
 ```
 
 ### Package
 
 ```bash
-make package            # Build all packages (npm + Python)
-make package-js         # Build npm packages only
-make package-python     # Build Python wheels only
+make package               # Build all packages (npm + Python)
+make package-js            # Build npm packages only
+make package-python        # Build Python wheels only
 ```
 
 ### Test
 
 ```bash
-make test               # Run all tests (CLI + JS + MCP)
-make test-cli           # Run CLI tests only
-make test-js            # Run JS library tests only
-make test-mcp           # Run MCP server tests only
-make test-python        # Run Python client tests
+make test                  # Run all tests (auto-installs Chrome for Testing)
+make test-cli              # Run CLI tests only
+make test-js               # Run JS library tests only
+make test-mcp              # Run MCP server tests only
+make test-python           # Run Python client tests
 ```
 
 ### Other
 
 ```bash
-make install-browser    # Install Chrome for Testing
-make deps               # Install npm dependencies
-make serve              # Start proxy server on :9515
-make double-tap         # Kill zombie Chrome/chromedriver processes
+make install-browser       # Install Chrome for Testing
+make deps                  # Install npm dependencies
+make serve                 # Start proxy server on :9515
+make double-tap            # Kill zombie Chrome/chromedriver processes
+make get-version           # Show current version
+make set-version VERSION=x.x.x  # Set version across all packages
 ```
 
 ### Clean
 
 ```bash
-make clean              # Clean binaries and JS dist
-make clean-packages     # Clean built npm packages
-make clean-python # Clean built Python packages
-make clean-cache        # Clean cached Chrome for Testing
-make clean-all          # Clean everything
+make clean                 # Clean binaries and JS dist
+make clean-go              # Clean clicker binaries
+make clean-js              # Clean JS client dist
+make clean-npm-packages    # Clean built npm packages
+make clean-python-packages # Clean Python packages
+make clean-packages        # Clean all packages (npm + Python)
+make clean-cache           # Clean cached Chrome for Testing
+make clean-all             # Clean everything
 ```
 
 ---
