@@ -98,7 +98,7 @@ func GetToolSchemas() []Tool {
 		},
 		{
 			Name:        "browser_evaluate",
-			Description: "Execute JavaScript code in the browser and return the result",
+			Description: "Execute JavaScript in the browser to extract data, query the DOM, or inspect page state. Returns the evaluated result. Use this to get text content, attributes, element data, or any information from the page.",
 			InputSchema: map[string]interface{}{
 				"type": "object",
 				"properties": map[string]interface{}{
